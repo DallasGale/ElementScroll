@@ -56,7 +56,7 @@ export function getWindowHeight(output: number) {
  *
  * @param element
  */
-export function ScrollerSize(element: HTMLElement) {
+export function getScrollerHeight(element: HTMLElement) {
   const output = element.getBoundingClientRect().height;
   return output;
 }

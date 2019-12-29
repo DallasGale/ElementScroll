@@ -16497,12 +16497,12 @@ exports.getWindowHeight = getWindowHeight;
  * @param element
  */
 
-function ScrollerSize(element) {
+function getScrollerHeight(element) {
   var output = element.getBoundingClientRect().height;
   return output;
 }
 
-exports.ScrollerSize = ScrollerSize;
+exports.getScrollerHeight = getScrollerHeight;
 },{"resize-observer-polyfill":"node_modules/resize-observer-polyfill/dist/ResizeObserver.es.js"}],"scripts/handlers.ts":[function(require,module,exports) {
 "use strict";
 
@@ -16512,20 +16512,35 @@ Object.defineProperty(exports, "__esModule", {
 
 var functions_1 = require("./functions");
 
-exports.setScrollerPositions = function scrollHandler(size, referenceElement, scroller, percentageScrolled) {
-  // State Machine
+exports.setScrollerPositions = function scrollHandler(size, referenceElement, scroller, scrollCase, percentageScrolled) {
+  var currentValue = referenceElement.getBoundingClientRect().y;
+  var scrollerHeight = functions_1.getScrollerHeight(scroller);
+  var scrollCaseHeight = scrollCase.getBoundingClientRect().height;
+  var takeScrollerHeightFromCaseHeight = scrollerHeight / scrollCaseHeight; // console.log("scrollerFinishPosition", scrollerFinishPosition * 100);
+
+  var scrollerFinishPosition = takeScrollerHeightFromCaseHeight * 100;
+  var num = functions_1.FormatToPercent(functions_1.ConvertNumberToPercentage(functions_1.FormattedCurrentValue(currentValue), size)); // State Machine
+
+  var snapToEndPos = 95;
+  var endPos = 100 - scrollerFinishPosition;
+  console.log("endPos", endPos);
   var STATUS = {
     id: "progress",
     states: {
       start: 0,
       snapToStart: 2,
-      snapToEnd: 98,
-      end: 100
+      snapToEnd: endPos,
+      end: endPos
     }
   };
-  var currentValue = referenceElement.getBoundingClientRect().y;
-  var num = functions_1.FormatToPercent(functions_1.ConvertNumberToPercentage(functions_1.FormattedCurrentValue(currentValue), size));
-  var progress = functions_1.FormattedCurrentValue(num); // When scroller is inbetween start and end points.
+  console.log(STATUS.states.snapToEnd);
+  console.log(STATUS.states.end);
+  var progress = functions_1.FormattedCurrentValue(num); // if (progress > STATUS.states.start && progress < STATUS.states.end) {
+  //   referenceElement.classList.add("fixed");
+  // } else {
+  //   referenceElement.classList.remove("fixed");
+  // }
+  // When scroller is inbetween start and end points.
 
   if (progress > STATUS.states.snapToStart && progress < STATUS.states.snapToEnd) {
     scroller.style.top = progress + "%";
@@ -16544,20 +16559,22 @@ exports.setScrollerPositions = function scrollHandler(size, referenceElement, sc
     return;
   } else if ( // When scroller is at the END positions.
   progress > STATUS.states.snapToEnd && progress < STATUS.states.end) {
-    scroller.style.top = "100%";
-    percentageScrolled.innerText = "100%";
+    scroller.style.top = endPos.toString();
+    percentageScrolled.innerText = endPos + "%";
     scroller.classList.add("snap");
     return;
   } else {
     return;
-  }
+  } // scroller.style.top = progress + "%";
+  // percentageScrolled.innerText = progress.toString();
+
 };
 
-exports.setScroll = function (size, referenceElement, scroller, percentageScrolled) {
+exports.setScroll = function (size, referenceElement, scroller, scrollCase, percentageScrolled) {
   var negOrPos = Math.sign(referenceElement.getBoundingClientRect().y);
 
   if (negOrPos === -1) {
-    return exports.setScrollerPositions(size, referenceElement, scroller, percentageScrolled);
+    return exports.setScrollerPositions(size, referenceElement, scroller, scrollCase, percentageScrolled);
   } else {
     return;
   }
@@ -16581,18 +16598,19 @@ var functions_1 = require("./functions"); // * DOM Elements
 
 var referenceElement = document.getElementById("reference-element");
 var percentageScrolled = document.getElementById("percentage-scrolled");
-var scroller = document.getElementById("scroller"); // * Element Measurements
+var scroller = document.getElementById("scroller");
+var scrollCase = document.getElementById("scroll-case"); // * Element Measurements
 
 var documentElement = document.documentElement;
-var windowHeight = documentElement.clientHeight;
-var scrollerHeight = functions_1.ScrollerSize(scroller);
+var windowHeight = documentElement.clientHeight; // const scrollerHeight = ScrollerSize(scroller);
 
 if (window) {
   functions_1.getWindowHeight(windowHeight);
-  var totalHeight_1 = referenceElement.clientHeight - windowHeight;
+  var totalHeight_1 = referenceElement.clientHeight - windowHeight; // console.log("totalHeight", totalHeight);
+  // console.log("scrollerHeight", scrollerHeight);
 
   var setScroller = function setScroller(_) {
-    return handlers_1.setScroll(totalHeight_1, referenceElement, scroller, percentageScrolled);
+    return handlers_1.setScroll(totalHeight_1, referenceElement, scroller, scrollCase, percentageScrolled);
   };
 
   rxjs_1.fromEvent(document, "scroll").pipe(operators_1.throttleTime(10), operators_1.tap(setScroller)).subscribe();
@@ -16625,7 +16643,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53226" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59421" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

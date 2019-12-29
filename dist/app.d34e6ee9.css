@@ -19,6 +19,10 @@ body {
   z-index: 0;
 }
 
+.fixed {
+  position: fixed;
+}
+
 .scroll-wrapper {
   display: flex;
   height: 100vh;
@@ -30,7 +34,7 @@ body {
   z-index: 1;
 }
 
-.scroll-content {
+.scroll-case {
   background: #15c752;
   background: linear-gradient(0deg, #15c752 0%, #ffe972 100%, #00d4ff 100%, #ffe972 3350%);
   width: 100px;
