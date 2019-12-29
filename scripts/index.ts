@@ -1,6 +1,6 @@
 // todo: Add State Machine: for idle / scrollling to be added to event listener
 // todo: Add Up and Down arrows
-
+import ResizeObserver from "resize-observer-polyfill";
 import { handleScrollEvent } from "./handlers";
 import { ScrollerSize } from "./functions";
 
