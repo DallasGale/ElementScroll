@@ -15,7 +15,7 @@ body {
   height: 5000px;
   width: 100%;
   box-sizing: border-box;
-  background: rgb(31, 31, 31);
+  background: #1f1f1f;
   z-index: 0;
 }
 
@@ -31,17 +31,12 @@ body {
 }
 
 .scroll-content {
-  background: rgb(21, 199, 82);
-  background: linear-gradient(
-    0deg,
-    rgba(21, 199, 82, 1) 0%,
-    rgba(255, 233, 114, 1) 100%,
-    rgba(0, 212, 255, 1) 100%,
-    rgba(255, 233, 114, 1) 3350%
-  );
+  background: #15c752;
+  background: linear-gradient(0deg, #15c752 0%, #ffe972 100%, #00d4ff 100%, #ffe972 3350%);
   width: 100px;
   height: 300px;
 }
+
 .scroller {
   background: white;
   position: relative;
@@ -65,5 +60,4 @@ sup {
   font-size: 2rem;
 }
 
-
-/*# sourceMappingURL=/styles.8986bff4.css.map */
+/*# sourceMappingURL=/styles.164d45a1.css.map */

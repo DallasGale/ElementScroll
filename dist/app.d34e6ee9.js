@@ -117,134 +117,79 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"scripts/functions.js":[function(require,module,exports) {
-"use strict";
+})({"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
+var bundleURL = null;
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.ConvertNumberToPercentage = ConvertNumberToPercentage;
-exports.FormatToPercent = FormatToPercent;
-exports.FormattedCurrentValue = FormattedCurrentValue;
+function getBundleURLCached() {
+  if (!bundleURL) {
+    bundleURL = getBundleURL();
+  }
 
-/**
- *
- * @param {*} currentNumber
- * @param {*} totalNumber
- */
-function ConvertNumberToPercentage(currentNumber, totalNumber) {
-  var percent = currentNumber / totalNumber; // console.log("Percentage", percent);
-
-  return percent;
-}
-/**
- *
- * @param {*} number
- */
-
-
-function FormatToPercent(number) {
-  var formatted = number * 100; // console.log("FormatToPercent: ", formatted);
-
-  return formatted;
+  return bundleURL;
 }
 
-function FormattedCurrentValue(value) {
-  var output = Math.abs(value).toFixed(3); // console.log(output);
+function getBundleURL() {
+  // Attempt to find the URL of the current script and use that as the base URL
+  try {
+    throw new Error();
+  } catch (err) {
+    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
 
-  return output;
+    if (matches) {
+      return getBaseURL(matches[0]);
+    }
+  }
+
+  return '/';
 }
-},{}],"index.js":[function(require,module,exports) {
-"use strict";
 
-var _functions = require("./scripts/functions");
+function getBaseURL(url) {
+  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
+}
 
-// todo: Add State Machine: for idle / scrollling to be added to event listener
-// todo: Add Up and Down arrows
-// todo: Add magnetism when close to start or end (css).
-// * DOM Elements
-var referenceElement = document.getElementById("reference-element");
-var percentageScrolled = document.getElementById("percentage-scrolled");
-var scroller = document.getElementById("scroller"); // * Element Measurements
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+},{}],"node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
+var bundle = require('./bundle-url');
 
-var documentElement = document.documentElement;
-var windowHeight = documentElement.clientHeight;
-var referenceElementHeight = referenceElement.clientHeight;
-var scrollerHeight = scroller.clientHeight; // * Observer
+function updateLink(link) {
+  var newLink = link.cloneNode();
 
-var scrollStream = new MutationObserver(callback);
-var streamOptions = {
-  childList: true,
-  // attributes: true,
-  characterData: true // subtree: true,
-  // attributeFilter: ["one", "two"],
-  // attributeOldValue: false,
-  // characterDataOldValue: false
+  newLink.onload = function () {
+    link.remove();
+  };
 
-};
+  newLink.href = link.href.split('?')[0] + '?' + Date.now();
+  link.parentNode.insertBefore(newLink, link.nextSibling);
+}
 
-function callback(mutations) {} // console.log("mutations", mutations[0].target.innerText);
-// if (window) {
+var cssTimeout = null;
 
+function reloadCSS() {
+  if (cssTimeout) {
+    return;
+  }
 
-scrollStream.observe(percentageScrolled, streamOptions); // }
+  cssTimeout = setTimeout(function () {
+    var links = document.querySelectorAll('link[rel="stylesheet"]');
 
-var handleScrollEvent = function scrollHandler(size) {
-  var currentValue = referenceElement.getBoundingClientRect().y;
-  var number = (0, _functions.FormatToPercent)((0, _functions.ConvertNumberToPercentage)((0, _functions.FormattedCurrentValue)(currentValue), size));
-  var progress = (0, _functions.FormattedCurrentValue)(number);
-
-  if (progress > 2 && progress < 98.0) {
-    scroller.style.top = progress + "%";
-    percentageScrolled.innerText = progress; // * CSS
-
-    if (scroller.classList.contains("snap")) {
-      scroller.classList.remove("snap");
+    for (var i = 0; i < links.length; i++) {
+      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
+        updateLink(links[i]);
+      }
     }
 
-    return;
-  }
-
-  if (progress > 0 && progress < 2) {
-    scroller.style.top = "0%";
-    percentageScrolled.innerText = 0; // * CSS
-
-    scroller.classList.add("snap");
-    return;
-  }
-
-  if (progress > 98 && progress < 100) {
-    scroller.style.top = "100%";
-    percentageScrolled.innerText = 100; // * CSS
-
-    scroller.classList.add("snap");
-    return;
-  }
-}; // * Script
-
-
-if (window) {
-  // todo  : use resive observer
-  window.addEventListener("resize", function () {
-    windowHeight = document.documentElement.clientHeight; // console.log("windowHeight", windowHeight);
-  });
-  var totalHeight = referenceElement.clientHeight - windowHeight;
-  var negOrPos = Math.sign(referenceElement.getBoundingClientRect().y); // let isScrolling = false;
-
-  window.addEventListener("scroll", function (e) {
-    // isScrolling = true;
-    negOrPos = Math.sign(referenceElement.getBoundingClientRect().y);
-
-    if (negOrPos === -1) {
-      handleScrollEvent(totalHeight);
-    } else {
-      return;
-    }
-  }, {
-    passive: true
-  });
+    cssTimeout = null;
+  }, 50);
 }
-},{"./scripts/functions":"scripts/functions.js"}],"../../../.config/yarn/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+
+module.exports = reloadCSS;
+},{"./bundle-url":"node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"styles/app.scss":[function(require,module,exports) {
+var reloadCSS = require('_css_loader');
+
+module.hot.dispose(reloadCSS);
+module.hot.accept(reloadCSS);
+},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -272,7 +217,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62889" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51600" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -303,8 +248,9 @@ if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
         assetsToAccept.forEach(function (v) {
           hmrAcceptRun(v[0], v[1]);
         });
-      } else {
-        window.location.reload();
+      } else if (location.reload) {
+        // `location` global exists in a web worker context but lacks `.reload()` function.
+        location.reload();
       }
     }
 
@@ -447,5 +393,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["../../../.config/yarn/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.js"], null)
-//# sourceMappingURL=/element-scroll.e31bb0bc.js.map
+},{}]},{},["node_modules/parcel-bundler/src/builtins/hmr-runtime.js"], null)
+//# sourceMappingURL=/app.d34e6ee9.js.map

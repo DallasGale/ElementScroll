@@ -117,126 +117,161 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"scripts/functions.js":[function(require,module,exports) {
+})({"scripts/functions.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.ConvertNumberToPercentage = ConvertNumberToPercentage;
-exports.FormatToPercent = FormatToPercent;
-exports.FormattedCurrentValue = FormattedCurrentValue;
-
 /**
  *
  * @param {*} currentNumber
  * @param {*} totalNumber
  */
+
 function ConvertNumberToPercentage(currentNumber, totalNumber) {
   var percent = currentNumber / totalNumber; // console.log("Percentage", percent);
 
   return percent;
 }
+
+exports.ConvertNumberToPercentage = ConvertNumberToPercentage;
 /**
  *
- * @param {*} number
+ * @param {*} value
  */
 
-
-function FormatToPercent(number) {
-  var formatted = number * 100; // console.log("FormatToPercent: ", formatted);
-
+function FormatToPercent(value) {
+  var formatted = value * 100;
   return formatted;
 }
 
-function FormattedCurrentValue(value) {
-  var output = Math.abs(value).toFixed(3); // console.log(output);
+exports.FormatToPercent = FormatToPercent;
+/**
+ *
+ * @param value
+ */
 
+function FormattedCurrentValue(value) {
+  var output = Math.abs(value).toFixed(3);
+  return parseFloat(output);
+}
+
+exports.FormattedCurrentValue = FormattedCurrentValue;
+/**
+ *
+ * @param element
+ */
+
+function ScrollerSize(element) {
+  var output = element.getBoundingClientRect().height;
   return output;
 }
-},{}],"index.js":[function(require,module,exports) {
+
+exports.ScrollerSize = ScrollerSize;
+},{}],"scripts/handlers.ts":[function(require,module,exports) {
 "use strict";
 
-var _functions = require("./scripts/functions");
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-// todo: Add State Machine: for idle / scrollling to be added to event listener
-// todo: Add Up and Down arrows
-// todo: Add magnetism when close to start or end (css).
-// * DOM Elements
-var referenceElement = document.getElementById("reference-element");
-var percentageScrolled = document.getElementById("percentage-scrolled");
-var scroller = document.getElementById("scroller"); // * Element Measurements
+var functions_1 = require("./functions");
 
-var documentElement = document.documentElement;
-var windowHeight = documentElement.clientHeight;
-var referenceElementHeight = referenceElement.clientHeight;
-var scrollerHeight = scroller.clientHeight; // * Observer
+exports.handleScrollEvent = function scrollHandler(size, referenceElement, scroller, percentageScrolled) {
+  // * State Machine
+  var STATUS = {
+    id: "Progress",
+    states: {
+      start: 0,
+      snapToStart: 2,
+      snapToEnd: 98,
+      end: 100
+    }
+  }; // let currentState = STATUS.states.start;
 
-var scrollStream = new MutationObserver(callback);
-var streamOptions = {
-  childList: true,
-  // attributes: true,
-  characterData: true // subtree: true,
-  // attributeFilter: ["one", "two"],
-  // attributeOldValue: false,
-  // characterDataOldValue: false
-
-};
-
-function callback(mutations) {} // console.log("mutations", mutations[0].target.innerText);
-// if (window) {
-
-
-scrollStream.observe(percentageScrolled, streamOptions); // }
-
-var handleScrollEvent = function scrollHandler(size) {
   var currentValue = referenceElement.getBoundingClientRect().y;
-  var number = (0, _functions.FormatToPercent)((0, _functions.ConvertNumberToPercentage)((0, _functions.FormattedCurrentValue)(currentValue), size));
-  var progress = (0, _functions.FormattedCurrentValue)(number);
+  var num = functions_1.FormatToPercent(functions_1.ConvertNumberToPercentage(functions_1.FormattedCurrentValue(currentValue), size));
+  var progress = functions_1.FormattedCurrentValue(num); // console.log(typeof progress);
 
-  if (progress > 2 && progress < 98.0) {
+  if (progress > STATUS.states.snapToStart && progress < STATUS.states.snapToEnd) {
     scroller.style.top = progress + "%";
-    percentageScrolled.innerText = progress; // * CSS
+    percentageScrolled.innerText = progress.toString(); //  CSS
 
     if (scroller.classList.contains("snap")) {
       scroller.classList.remove("snap");
     }
 
     return;
-  }
-
-  if (progress > 0 && progress < 2) {
+  } else if (progress > STATUS.states.start && progress < STATUS.states.snapToStart) {
+    // Set State
+    // currentState = STATUS.states.start;
     scroller.style.top = "0%";
-    percentageScrolled.innerText = 0; // * CSS
+    percentageScrolled.innerText = "0%"; //  CSS
 
     scroller.classList.add("snap");
     return;
-  }
-
-  if (progress > 98 && progress < 100) {
+  } else if (progress > STATUS.states.snapToEnd && progress < STATUS.states.end) {
+    // Set State
+    // currentState = STATUS.states.end;
     scroller.style.top = "100%";
-    percentageScrolled.innerText = 100; // * CSS
+    percentageScrolled.innerText = "100%"; // CSS
 
     scroller.classList.add("snap");
     return;
-  }
-}; // * Script
+  } else {
+    return;
+  } // if ((currentState = STATUS.states.start)) {
+  //   console.log("start");
+  // }
+  // if ((currentState = STATUS.states.end)) {
+  //   console.log("end");
+  // }
 
+};
+},{"./functions":"scripts/functions.ts"}],"scripts/index.ts":[function(require,module,exports) {
+"use strict"; // todo: Add State Machine: for idle / scrollling to be added to event listener
+// todo: Add Up and Down arrows
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var handlers_1 = require("./handlers");
+
+var functions_1 = require("./functions"); // * DOM Elements
+
+
+var referenceElement = document.getElementById("reference-element");
+var percentageScrolled = document.getElementById("percentage-scrolled");
+var scroller = document.getElementById("scroller"); // * Element Measurements
+
+var documentElement = document.documentElement;
+var windowHeight = documentElement.clientHeight;
+var scrollerHeight = functions_1.ScrollerSize(scroller);
+console.log("scrollerHeight", scrollerHeight); // * Script
 
 if (window) {
-  // todo  : use resive observer
-  window.addEventListener("resize", function () {
-    windowHeight = document.documentElement.clientHeight; // console.log("windowHeight", windowHeight);
-  });
-  var totalHeight = referenceElement.clientHeight - windowHeight;
-  var negOrPos = Math.sign(referenceElement.getBoundingClientRect().y); // let isScrolling = false;
+  // * Observer
+  if (ResizeObserver) {
+    var resizeObserver = new ResizeObserver(function (entries) {
+      for (var _i = 0, entries_1 = entries; _i < entries_1.length; _i++) {
+        var entry = entries_1[_i];
+        windowHeight = entry.target.clientHeight;
+      }
+    });
+    resizeObserver.observe(document.documentElement);
+  }
+
+  var totalHeight_1 = referenceElement.clientHeight - windowHeight;
+  var negOrPos_1 = Math.sign(referenceElement.getBoundingClientRect().y); // let isScrolling = false;
 
   window.addEventListener("scroll", function (e) {
     // isScrolling = true;
-    negOrPos = Math.sign(referenceElement.getBoundingClientRect().y);
+    negOrPos_1 = Math.sign(referenceElement.getBoundingClientRect().y);
 
-    if (negOrPos === -1) {
-      handleScrollEvent(totalHeight);
+    if (negOrPos_1 === -1) {
+      handlers_1.handleScrollEvent(totalHeight_1, referenceElement, scroller, percentageScrolled);
     } else {
       return;
     }
@@ -244,7 +279,7 @@ if (window) {
     passive: true
   });
 }
-},{"./scripts/functions":"scripts/functions.js"}],"../../../.config/yarn/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./handlers":"scripts/handlers.ts","./functions":"scripts/functions.ts"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -272,7 +307,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62889" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51600" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -303,8 +338,9 @@ if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
         assetsToAccept.forEach(function (v) {
           hmrAcceptRun(v[0], v[1]);
         });
-      } else {
-        window.location.reload();
+      } else if (location.reload) {
+        // `location` global exists in a web worker context but lacks `.reload()` function.
+        location.reload();
       }
     }
 
@@ -447,5 +483,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["../../../.config/yarn/global/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.js"], null)
-//# sourceMappingURL=/element-scroll.e31bb0bc.js.map
+},{}]},{},["node_modules/parcel-bundler/src/builtins/hmr-runtime.js","scripts/index.ts"], null)
+//# sourceMappingURL=/scripts.2ed900e3.js.map
