@@ -19,6 +19,7 @@ console.log("scrollerHeight", scrollerHeight);
 // * Script
 if (window) {
   // * Observer
+  // ? Check for Browser adoption...
   if (ResizeObserver) {
     const resizeObserver = new ResizeObserver(entries => {
       for (let entry of entries) {
@@ -26,6 +27,10 @@ if (window) {
       }
     });
     resizeObserver.observe(document.documentElement);
+  } else {
+    window.addEventListener("resize", () => {
+      windowHeight = document.documentElement.clientHeight;
+    });
   }
 
   let totalHeight = referenceElement.clientHeight - windowHeight;
