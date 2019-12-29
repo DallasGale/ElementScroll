@@ -1,3 +1,5 @@
+import ResizeObserver from "resize-observer-polyfill";
+
 /**
  *
  * @param {*} currentNumber
@@ -28,6 +30,26 @@ export function FormatToPercent(value: number) {
 export function FormattedCurrentValue(value: number) {
   const output = Math.abs(value).toFixed(3);
   return parseFloat(output);
+}
+
+/**
+ *
+ * @param output
+ */
+export function getWindowHeight(output: number) {
+  if (ResizeObserver) {
+    const resizeObserver = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        output = entry.target.clientHeight;
+      }
+    });
+    resizeObserver.observe(document.documentElement);
+  } else {
+    // If no browser support for ResizeObserver API.
+    window.addEventListener("resize", () => {
+      output = document.documentElement.clientHeight;
+    });
+  }
 }
 
 /**

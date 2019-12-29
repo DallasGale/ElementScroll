@@ -1,8 +1,10 @@
 // todo: Add State Machine: for idle / scrollling to be added to event listener
 // todo: Add Up and Down arrows
-import ResizeObserver from "resize-observer-polyfill";
-import { handleScrollEvent } from "./handlers";
-import { ScrollerSize } from "./functions";
+import { fromEvent } from "rxjs";
+import { throttleTime, tap } from "rxjs/operators";
+
+import { setScroll } from "./handlers";
+import { ScrollerSize, getWindowHeight } from "./functions";
 
 // * DOM Elements
 const referenceElement = document.getElementById("reference-element");
@@ -11,48 +13,22 @@ const scroller = document.getElementById("scroller");
 
 // * Element Measurements
 const documentElement = document.documentElement;
-let windowHeight = documentElement.clientHeight;
+const windowHeight = documentElement.clientHeight;
 const scrollerHeight = ScrollerSize(scroller);
 
-console.log("scrollerHeight", scrollerHeight);
-
-// * Script
 if (window) {
-  // * Observer
-  // ? Check for Browser adoption...
-  if (ResizeObserver) {
-    const resizeObserver = new ResizeObserver(entries => {
-      for (let entry of entries) {
-        windowHeight = entry.target.clientHeight;
-      }
-    });
-    resizeObserver.observe(document.documentElement);
-  } else {
-    window.addEventListener("resize", () => {
-      windowHeight = document.documentElement.clientHeight;
-    });
-  }
+  getWindowHeight(windowHeight);
+  const totalHeight = referenceElement.clientHeight - windowHeight;
+  const setScroller = _ => {
+    return setScroll(
+      totalHeight,
+      referenceElement,
+      scroller,
+      percentageScrolled
+    );
+  };
 
-  let totalHeight = referenceElement.clientHeight - windowHeight;
-  let negOrPos = Math.sign(referenceElement.getBoundingClientRect().y);
-  // let isScrolling = false;
-  window.addEventListener(
-    "scroll",
-    e => {
-      // isScrolling = true;
-      negOrPos = Math.sign(referenceElement.getBoundingClientRect().y);
-
-      if (negOrPos === -1) {
-        handleScrollEvent(
-          totalHeight,
-          referenceElement,
-          scroller,
-          percentageScrolled
-        );
-      } else {
-        return;
-      }
-    },
-    { passive: true }
-  );
+  fromEvent(document, "scroll")
+    .pipe(throttleTime(10), tap(setScroller))
+    .subscribe();
 }
